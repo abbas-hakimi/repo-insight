@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AnalyzeForm from '../components/dashboard/AnalyzeForm.jsx';
 import DependencyEdgesTable from '../components/dashboard/DependencyEdgesTable.jsx';
+import DependencyHotspotsSection from '../components/dashboard/DependencyHotspotsSection.jsx';
 import StatsGrid from '../components/dashboard/StatsGrid.jsx';
 import ViewGraphButton from '../components/graph/ViewGraphButton.jsx';
 import Header from '../components/layout/Header.jsx';
@@ -70,6 +71,7 @@ export default function RepositoryDashboard() {
               <ViewGraphButton analysisResult={result} />
             </div>
             <StatsGrid result={result} />
+            <DependencyHotspotsSection dependencyHotspots={result.dependencyHotspots} />
             <DependencyEdgesTable edges={result.dependencyGraph?.edges ?? []} />
           </div>
         )}

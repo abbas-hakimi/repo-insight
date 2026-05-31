@@ -14,6 +14,7 @@ export async function analyzeRepository(req, res, next) {
       fileTreeMeta,
       dependencyGraph,
       graphMeta,
+      dependencyHotspots,
     } = await repositoryService.analyzeRepository(req.body.githubUrl);
 
     res.status(200).json({
@@ -26,6 +27,7 @@ export async function analyzeRepository(req, res, next) {
       fileTreeMeta,
       dependencyGraph,
       graphMeta,
+      dependencyHotspots,
     });
   } catch (err) {
     next(err);

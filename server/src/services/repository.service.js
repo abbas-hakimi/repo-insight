@@ -6,6 +6,7 @@ import { parseGitHubUrl } from '../utils/githubUrl.js';
 import { HttpError } from '../utils/httpError.js';
 import { analyzeRepositoryContents } from './repositoryStats.service.js';
 import { buildRepositoryFileTree } from './repositoryTree.service.js';
+import { computeDependencyHotspots } from './dependencyHotspots.service.js';
 import { buildRepositoryDependencyGraph } from './repositoryDependencyGraph.service.js';
 
 function logPhase(label, startMs, detail = '') {
@@ -90,6 +91,8 @@ export async function analyzeRepository(githubUrl) {
       ),
     ]);
 
+  const dependencyHotspots = computeDependencyHotspots(dependencyGraph);
+
   logPhase('total', totalStart);
   console.log(`[analyze] request end ${owner}/${repo}`);
 
@@ -102,5 +105,6 @@ export async function analyzeRepository(githubUrl) {
     fileTreeMeta,
     dependencyGraph,
     graphMeta,
+    dependencyHotspots,
   };
 }
