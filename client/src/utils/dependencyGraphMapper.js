@@ -1,4 +1,4 @@
-import { applyDagreLayout } from './dagreLayout.js';
+import { applyClusteredDagreLayout } from './dagreLayout.js';
 import { getFileName, getNodeColors } from './nodePresentation.js';
 
 export const MAX_RENDER_NODES = 100;
@@ -37,16 +37,24 @@ export function mapDependencyGraphToReactFlow(dependencyGraph) {
     style: { stroke: '#94a3b8', strokeWidth: 1.5 },
   }));
 
-  const nodes = applyDagreLayout(baseNodes, baseEdges);
+  const { fileNodes, clusterNodes } = applyClusteredDagreLayout(baseNodes, baseEdges);
+  const nodes = [...clusterNodes, ...fileNodes];
+
+  const baseEdgesStyled = baseEdges.map((edge) => ({
+    ...edge,
+    type: 'smoothstep',
+    pathOptions: { borderRadius: 12, offset: 8 },
+  }));
 
   return {
     nodes,
-    edges: baseEdges,
+    edges: baseEdgesStyled,
     stats: {
       totalNodes: apiNodes.length,
       totalEdges: apiEdges.length,
-      renderedNodes: nodes.length,
+      renderedNodes: fileNodes.length,
       renderedEdges: baseEdges.length,
+      clusterCount: clusterNodes.length,
     },
   };
 }
@@ -61,5 +69,6 @@ export function matchesFilenameFilter(node, query) {
   if (!query.trim()) {
     return true;
   }
-  return node.data.fileName.toLowerCase().includes(query.trim().toLowerCase());
+  const name = node.data?.fileName ?? '';
+  return name.toLowerCase().includes(query.trim().toLowerCase());
 }

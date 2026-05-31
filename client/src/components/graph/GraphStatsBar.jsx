@@ -8,7 +8,8 @@ export default function GraphStatsBar({ stats, repositoryLabel }) {
       )}
       <Stat label="Total nodes" value={stats.totalNodes} />
       <Stat label="Total edges" value={stats.totalEdges} />
-      <Stat label="Rendered nodes" value={stats.renderedNodes} highlight />
+      <Stat label="Rendered files" value={stats.renderedNodes} highlight />
+      <Stat label="Folder clusters" value={stats.clusterCount ?? '—'} />
       <Stat label="Rendered edges" value={stats.renderedEdges} />
     </div>
   );

@@ -74,7 +74,7 @@ export default function DependencyGraphPage() {
           <div>
             <h2 className="text-2xl font-bold text-slate-900">Dependency Graph</h2>
             <p className="mt-1 text-sm text-slate-600">
-              Priority source paths · Dagre layout · search shows neighbors and connecting edges
+              Folder clusters · layered Dagre layout · collapse groups · search unchanged
             </p>
           </div>
           <Link
@@ -100,7 +100,7 @@ export default function DependencyGraphPage() {
               incomingCount={searchStats.incomingCount}
               outgoingCount={searchStats.outgoingCount}
               edgeCount={searchStats.edgeCount}
-              totalCount={graphData.nodes.length}
+              totalCount={graphData.stats.renderedNodes}
             />
 
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
@@ -129,6 +129,7 @@ export default function DependencyGraphPage() {
               <Legend swatch="#a78bfa" label="Incoming neighbor" />
               <Legend swatch="#2dd4bf" label="Outgoing neighbor" />
               <Legend swatch="#6366f1" label="Connecting edge (animated)" />
+              <Legend swatch="#cbd5e1" label="Folder cluster (click header to collapse)" />
             </div>
           </>
         )}
