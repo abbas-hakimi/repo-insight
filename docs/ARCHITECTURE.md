@@ -19,6 +19,6 @@ When adding a feature (e.g. `codebases`):
 4. `routes/codebase.routes.js`
 5. Mount in `routes/index.js`
 
-## Repository analysis (V2)
+## Repository analysis (V3)
 
-`POST /api/v1/repositories/analyze` — validates a GitHub URL, ensures a shallow clone exists under `REPOS_CLONE_DIR` (`{owner}-{repo}`), reuses existing clones, returns `owner`, `repositoryName`, and `localPath`. Requires **Git** on PATH.
+`POST /api/v1/repositories/analyze` — validates URL, ensures clone under `REPOS_CLONE_DIR`, traverses files (skipping `node_modules`, `.git`, `dist`, `build`, `coverage`), returns `statistics` with file/folder counts and extension histogram. Requires **Git** on PATH.

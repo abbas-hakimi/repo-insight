@@ -4,6 +4,7 @@ import simpleGit from 'simple-git';
 import { env } from '../config/env.js';
 import { parseGitHubUrl } from '../utils/githubUrl.js';
 import { HttpError } from '../utils/httpError.js';
+import { analyzeRepositoryContents } from './repositoryStats.service.js';
 
 /**
  * Deterministic on-disk path: one folder per owner/repo under REPOS_CLONE_DIR.
@@ -46,26 +47,24 @@ async function cloneRepository(cloneUrl, localPath) {
 }
 
 /**
- * Repository analysis V2 — validate URL, ensure a local clone exists, return metadata.
+ * Repository analysis V3 — validate URL, ensure clone exists, scan contents, return metadata + statistics.
  */
 export async function analyzeRepository(githubUrl) {
   const { owner, repo, cloneUrl } = parseGitHubUrl(githubUrl);
   const localPath = getLocalRepoPath(owner, repo);
 
-  if (await isClonedRepository(localPath)) {
-    return {
-      owner,
-      repositoryName: repo,
-      localPath: path.resolve(localPath),
-    };
+  if (!(await isClonedRepository(localPath))) {
+    await rm(localPath, { recursive: true, force: true }).catch(() => {});
+    await cloneRepository(cloneUrl, localPath);
   }
 
-  await rm(localPath, { recursive: true, force: true }).catch(() => {});
-  await cloneRepository(cloneUrl, localPath);
+  const resolvedPath = path.resolve(localPath);
+  const statistics = await analyzeRepositoryContents(resolvedPath);
 
   return {
     owner,
     repositoryName: repo,
-    localPath: path.resolve(localPath),
+    localPath: resolvedPath,
+    statistics,
   };
 }
