@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AnalyzeForm from '../components/dashboard/AnalyzeForm.jsx';
 import DependencyEdgesTable from '../components/dashboard/DependencyEdgesTable.jsx';
 import StatsGrid from '../components/dashboard/StatsGrid.jsx';
+import ViewGraphButton from '../components/graph/ViewGraphButton.jsx';
 import Header from '../components/layout/Header.jsx';
 import { analyzeRepository } from '../services/repositoryService.js';
 
@@ -65,6 +66,9 @@ export default function RepositoryDashboard() {
 
         {result && (
           <div className="space-y-8">
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <ViewGraphButton analysisResult={result} />
+            </div>
             <StatsGrid result={result} />
             <DependencyEdgesTable edges={result.dependencyGraph?.edges ?? []} />
           </div>

@@ -8,6 +8,7 @@ import {
 import { IGNORED_REPOSITORY_DIRS } from '../constants/repositoryIgnore.js';
 import { parseRelativeImports } from '../utils/importParser.js';
 import { resolveRelativeImport, toRepoRelativeId } from '../utils/moduleResolver.js';
+import { prioritizeSourceFiles } from '../utils/sourceFileSelection.js';
 
 /**
  * Build a file-to-file dependency graph for JS/TS modules (relative imports only).
@@ -17,18 +18,19 @@ export async function buildRepositoryDependencyGraph(rootPath) {
   const allSourceFiles = await collectSourceFiles(repoRoot);
   const knownFiles = new Set(allSourceFiles);
 
+  const { selected: filesToAnalyze, selectionMeta } = prioritizeSourceFiles(
+    allSourceFiles,
+    DEPENDENCY_GRAPH_MAX_NODES,
+  );
+
   const nodeIds = new Set();
   const edges = [];
-  let truncated = false;
+  let truncated = selectionMeta.truncated;
+  let filesParsed = 0;
+  let importsDetected = 0;
+  let edgesCreated = 0;
 
-  const filesToAnalyze =
-    allSourceFiles.length > DEPENDENCY_GRAPH_MAX_NODES
-      ? allSourceFiles.slice(0, DEPENDENCY_GRAPH_MAX_NODES)
-      : allSourceFiles;
-
-  if (allSourceFiles.length > DEPENDENCY_GRAPH_MAX_NODES) {
-    truncated = true;
-  }
+  console.log('[dependency-graph] selection', selectionMeta.tierCounts);
 
   for (const fileId of filesToAnalyze) {
     if (!addNode(nodeIds, fileId)) {
@@ -39,11 +41,13 @@ export async function buildRepositoryDependencyGraph(rootPath) {
     let source;
     try {
       source = await readFile(path.join(repoRoot, fileId), 'utf8');
+      filesParsed += 1;
     } catch {
       continue;
     }
 
     const specifiers = parseRelativeImports(source);
+    importsDetected += specifiers.length;
 
     for (const specifier of specifiers) {
       if (edges.length >= DEPENDENCY_GRAPH_MAX_EDGES) {
@@ -62,6 +66,7 @@ export async function buildRepositoryDependencyGraph(rootPath) {
       }
 
       edges.push({ source: fileId, target: targetId });
+      edgesCreated += 1;
     }
 
     if (edges.length >= DEPENDENCY_GRAPH_MAX_EDGES) {
@@ -74,6 +79,17 @@ export async function buildRepositoryDependencyGraph(rootPath) {
     .sort((a, b) => a.localeCompare(b))
     .map((id) => ({ id, type: 'file' }));
 
+  const diagnostics = {
+    filesDiscovered: allSourceFiles.length,
+    filesSelected: filesToAnalyze.length,
+    filesParsed,
+    importsDetected,
+    edgesCreated,
+    selectionTierCounts: selectionMeta.tierCounts,
+  };
+
+  console.log('[dependency-graph] diagnostics', diagnostics);
+
   return {
     dependencyGraph: { nodes, edges },
     graphMeta: {
@@ -83,6 +99,7 @@ export async function buildRepositoryDependencyGraph(rootPath) {
       maxNodes: DEPENDENCY_GRAPH_MAX_NODES,
       maxEdges: DEPENDENCY_GRAPH_MAX_EDGES,
       sourceFilesDiscovered: allSourceFiles.length,
+      ...diagnostics,
     },
   };
 }
@@ -140,5 +157,5 @@ async function collectSourceFiles(repoRoot) {
     }
   }
 
-  return files.sort((a, b) => a.localeCompare(b));
+  return files;
 }

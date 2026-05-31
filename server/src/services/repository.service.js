@@ -8,6 +8,19 @@ import { analyzeRepositoryContents } from './repositoryStats.service.js';
 import { buildRepositoryFileTree } from './repositoryTree.service.js';
 import { buildRepositoryDependencyGraph } from './repositoryDependencyGraph.service.js';
 
+function logPhase(label, startMs, detail = '') {
+  const durationMs = Math.round(performance.now() - startMs);
+  console.log(`[analyze] ${label} end ${durationMs}ms${detail ? ` ${detail}` : ''}`);
+}
+
+async function timedPhase(label, fn) {
+  const start = performance.now();
+  console.log(`[analyze] ${label} start`);
+  const result = await fn();
+  logPhase(label, start);
+  return result;
+}
+
 /**
  * Deterministic on-disk path: one folder per owner/repo under REPOS_CLONE_DIR.
  */
@@ -52,21 +65,33 @@ async function cloneRepository(cloneUrl, localPath) {
  * Repository analysis V5 — clone, statistics, file tree, and dependency graph.
  */
 export async function analyzeRepository(githubUrl) {
+  const totalStart = performance.now();
+  console.log(`[analyze] request start ${githubUrl}`);
+
   const { owner, repo, cloneUrl } = parseGitHubUrl(githubUrl);
   const localPath = getLocalRepoPath(owner, repo);
 
-  if (!(await isClonedRepository(localPath))) {
-    await rm(localPath, { recursive: true, force: true }).catch(() => {});
-    await cloneRepository(cloneUrl, localPath);
-  }
+  await timedPhase('cloneRepository', async () => {
+    if (!(await isClonedRepository(localPath))) {
+      await rm(localPath, { recursive: true, force: true }).catch(() => {});
+      await cloneRepository(cloneUrl, localPath);
+      return 'cloned';
+    }
+    return 'reused existing clone';
+  });
 
   const resolvedPath = path.resolve(localPath);
   const [statistics, { fileTree, fileTreeMeta }, { dependencyGraph, graphMeta }] =
     await Promise.all([
-      analyzeRepositoryContents(resolvedPath),
-      buildRepositoryFileTree(resolvedPath),
-      buildRepositoryDependencyGraph(resolvedPath),
+      timedPhase('repository statistics', () => analyzeRepositoryContents(resolvedPath)),
+      timedPhase('file tree generation', () => buildRepositoryFileTree(resolvedPath)),
+      timedPhase('dependency graph generation', () =>
+        buildRepositoryDependencyGraph(resolvedPath),
+      ),
     ]);
+
+  logPhase('total', totalStart);
+  console.log(`[analyze] request end ${owner}/${repo}`);
 
   return {
     owner,

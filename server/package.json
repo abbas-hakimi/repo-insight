@@ -5,7 +5,8 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "dev": "node --watch src/server.js",
+    "dev": "node dev-with-watch-log.mjs",
+    "dev:plain": "node --watch-path=./src --watch-preserve-output --watch src/server.js",
     "start": "node src/server.js",
     "lint": "echo \"Add ESLint when ready\""
   },

@@ -1,12 +1,14 @@
 import dotenv from 'dotenv';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '../../..');
-const defaultReposCloneDir = path.join(projectRoot, 'repos');
+/** Outside synced project tree by default — avoids OneDrive churn and watch-mode noise. */
+const defaultReposCloneDir = path.join(tmpdir(), 'ai-codebase-intelligence', 'repos');
 
 function resolveReposCloneDir() {
   const fromEnv = process.env.REPOS_CLONE_DIR?.trim();
