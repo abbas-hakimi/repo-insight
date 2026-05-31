@@ -6,6 +6,7 @@ import { parseGitHubUrl } from '../utils/githubUrl.js';
 import { HttpError } from '../utils/httpError.js';
 import { analyzeRepositoryContents } from './repositoryStats.service.js';
 import { buildRepositoryFileTree } from './repositoryTree.service.js';
+import { buildRepositoryDependencyGraph } from './repositoryDependencyGraph.service.js';
 
 /**
  * Deterministic on-disk path: one folder per owner/repo under REPOS_CLONE_DIR.
@@ -48,7 +49,7 @@ async function cloneRepository(cloneUrl, localPath) {
 }
 
 /**
- * Repository analysis V4 — clone, statistics, and hierarchical file tree.
+ * Repository analysis V5 — clone, statistics, file tree, and dependency graph.
  */
 export async function analyzeRepository(githubUrl) {
   const { owner, repo, cloneUrl } = parseGitHubUrl(githubUrl);
@@ -60,10 +61,12 @@ export async function analyzeRepository(githubUrl) {
   }
 
   const resolvedPath = path.resolve(localPath);
-  const [statistics, { fileTree, fileTreeMeta }] = await Promise.all([
-    analyzeRepositoryContents(resolvedPath),
-    buildRepositoryFileTree(resolvedPath),
-  ]);
+  const [statistics, { fileTree, fileTreeMeta }, { dependencyGraph, graphMeta }] =
+    await Promise.all([
+      analyzeRepositoryContents(resolvedPath),
+      buildRepositoryFileTree(resolvedPath),
+      buildRepositoryDependencyGraph(resolvedPath),
+    ]);
 
   return {
     owner,
@@ -72,5 +75,7 @@ export async function analyzeRepository(githubUrl) {
     statistics,
     fileTree,
     fileTreeMeta,
+    dependencyGraph,
+    graphMeta,
   };
 }

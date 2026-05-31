@@ -5,8 +5,16 @@ import * as repositoryService from '../services/repository.service.js';
  */
 export async function analyzeRepository(req, res, next) {
   try {
-    const { owner, repositoryName, localPath, statistics, fileTree, fileTreeMeta } =
-      await repositoryService.analyzeRepository(req.body.githubUrl);
+    const {
+      owner,
+      repositoryName,
+      localPath,
+      statistics,
+      fileTree,
+      fileTreeMeta,
+      dependencyGraph,
+      graphMeta,
+    } = await repositoryService.analyzeRepository(req.body.githubUrl);
 
     res.status(200).json({
       success: true,
@@ -16,6 +24,8 @@ export async function analyzeRepository(req, res, next) {
       statistics,
       fileTree,
       fileTreeMeta,
+      dependencyGraph,
+      graphMeta,
     });
   } catch (err) {
     next(err);
