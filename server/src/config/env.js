@@ -1,8 +1,20 @@
 import dotenv from 'dotenv';
 import path from 'node:path';
-import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 
 dotenv.config();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.resolve(__dirname, '../../..');
+const defaultReposCloneDir = path.join(projectRoot, 'repos');
+
+function resolveReposCloneDir() {
+  const fromEnv = process.env.REPOS_CLONE_DIR?.trim();
+  if (fromEnv) {
+    return path.resolve(fromEnv);
+  }
+  return defaultReposCloneDir;
+}
 
 const required = ['PORT'];
 
@@ -21,9 +33,7 @@ export const env = {
   hasMongoDb: Boolean(mongodbUri),
   corsOrigin: process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()) ?? [],
   apiPrefix: process.env.API_PREFIX ?? '/api/v1',
-  reposCloneDir:
-    process.env.REPOS_CLONE_DIR ??
-    path.join(tmpdir(), 'ai-codebase-intelligence', 'repos'),
+  reposCloneDir: resolveReposCloneDir(),
   isDev: process.env.NODE_ENV !== 'production',
   isProd: process.env.NODE_ENV === 'production',
 };

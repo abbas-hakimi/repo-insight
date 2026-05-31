@@ -5,7 +5,7 @@ const GITHUB_REPO_PATTERN =
 
 /**
  * Validates and parses a public GitHub repository URL.
- * @returns {{ owner: string, repo: string }}
+ * @returns {{ owner: string, repo: string, cloneUrl: string }}
  */
 export function parseGitHubUrl(input) {
   if (!input || typeof input !== 'string') {
@@ -41,5 +41,9 @@ export function parseGitHubUrl(input) {
 
   const [, owner, repo] = match;
 
-  return { owner, repo };
+  return {
+    owner,
+    repo,
+    cloneUrl: `https://github.com/${owner}/${repo}.git`,
+  };
 }

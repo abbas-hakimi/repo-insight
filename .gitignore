@@ -26,6 +26,9 @@ Thumbs.db
 coverage/
 .nyc_output/
 
+# Cloned repositories (local analysis cache)
+/repos/
+
 # Misc
 *.local
 .cache/
