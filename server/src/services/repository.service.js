@@ -5,6 +5,7 @@ import { env } from '../config/env.js';
 import { parseGitHubUrl } from '../utils/githubUrl.js';
 import { HttpError } from '../utils/httpError.js';
 import { analyzeRepositoryContents } from './repositoryStats.service.js';
+import { buildRepositoryFileTree } from './repositoryTree.service.js';
 
 /**
  * Deterministic on-disk path: one folder per owner/repo under REPOS_CLONE_DIR.
@@ -47,7 +48,7 @@ async function cloneRepository(cloneUrl, localPath) {
 }
 
 /**
- * Repository analysis V3 — validate URL, ensure clone exists, scan contents, return metadata + statistics.
+ * Repository analysis V4 — clone, statistics, and hierarchical file tree.
  */
 export async function analyzeRepository(githubUrl) {
   const { owner, repo, cloneUrl } = parseGitHubUrl(githubUrl);
@@ -59,12 +60,17 @@ export async function analyzeRepository(githubUrl) {
   }
 
   const resolvedPath = path.resolve(localPath);
-  const statistics = await analyzeRepositoryContents(resolvedPath);
+  const [statistics, { fileTree, fileTreeMeta }] = await Promise.all([
+    analyzeRepositoryContents(resolvedPath),
+    buildRepositoryFileTree(resolvedPath),
+  ]);
 
   return {
     owner,
     repositoryName: repo,
     localPath: resolvedPath,
     statistics,
+    fileTree,
+    fileTreeMeta,
   };
 }
